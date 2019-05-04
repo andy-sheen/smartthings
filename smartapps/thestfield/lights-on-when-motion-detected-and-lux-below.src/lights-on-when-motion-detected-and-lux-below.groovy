@@ -72,7 +72,9 @@ def updated() {
 
 def motionHandler(evt) {
     def currentLux = lightmeter1.currentValue("illuminance")
-    log.debug "Current lux level: $currentLux, threshold for switch on: $lightlevel1"
+    if (evt.value == "active") {
+        log.debug "Motion detected: current lux level: $currentLux, threshold for switch on: $lightlevel1"
+    }
     if ((evt.value == "active") && (currentLux < lightlevel1)) {
         lightsOn()
     } else if ((evt.value == "inactive") && (state.swOn == true)) {
