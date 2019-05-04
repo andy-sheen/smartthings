@@ -26,78 +26,81 @@ definition(
 )
 
 preferences {
-	section("Turn on when there's movement from..."){
-		input "motion1", "capability.motionSensor", title: "Where?"
-	}
-	section("And off when there's been no reported movement for..."){
-		input "minutes1", "number", title: "Minutes?"
-	}
+    section("Turn on when there's movement from..."){
+        input "motion1", "capability.motionSensor", title: "Where?"
+    }
+    section("And off when there's been no reported movement for..."){
+        input "minutes1", "number", title: "Minutes?"
+    }
     section("And light level is below..."){
-    	input "lightlevel1", "number", title: "Lux"
+        input "lightlevel1", "number", title: "Lux"
     }
     section("From lightmeter..."){
-    	input "lightmeter1", "capability.illuminanceMeasurement", title: "Light meter?"
+        input "lightmeter1", "capability.illuminanceMeasurement", title: "Light meter?"
     }
-	section("Turn on/off the following light(s)..."){
-		input "switches", "capability.switch", multiple: true
-	}
+    section("Turn on the following light(s)..."){
+        input "onswitches", "capability.switch", multiple: true
+    }
+    section("Turn off the following light(s)..."){
+        input "offswitches", "capability.switch", multiple: true
+    }
 }
 
 def lightsOff() {
-    switches.off()
-    state.swOn = false	
+    offswitches.off()
+    state.swOn = false
     log.debug "lights off..."
 }
 
 def lightsOn() {
-    switches.on()
+    onswitches.on()
     state.swOn = true
     log.debug "lights on..."
 }
 
 def installed() {
-	log.debug "Installing handler..."
+    log.debug "Installing handler..."
     subscribe(motion1, "motion", motionHandler)
     lightsOff()
 }
 
 def updated() {
-	log.debug "Updated configuration. Unsubscribing and re-installing..."
-	unsubscribe()
-	installed()
+    log.debug "Updated configuration. Unsubscribing and re-installing..."
+    unsubscribe()
+    installed()
 }
 
 def motionHandler(evt) {
     def currentLux = lightmeter1.currentValue("illuminance")
-	log.debug "$evt.name: $evt.value current lux level: $currentLux, threshold for switch on: $lightlevel1"
-	if ((evt.value == "active") && (currentLux < lightlevel1)) {
-		lightsOn()
+    log.debug "$evt.name: $evt.value current lux level: $currentLux, threshold for switch on: $lightlevel1"
+    if ((evt.value == "active") && (currentLux < lightlevel1)) {
+        lightsOn()
     } else if ((evt.value == "inactive") && (state.swOn == true)) {
-		if (minutes1 >= 1) {
-        	runIn(minutes1 * 60, scheduleCheck, [overwrite: false])
-        	log.debug "Scheduled switchoff of light(s) in $minutes minutes due to added delay." 
+        if (minutes1 >= 1) {
+            runIn(minutes1 * 60, scheduleCheck, [overwrite: false])
+            log.debug "Scheduled switchoff of light(s) in $minutes1 minutes due to added delay."
         } else {
             log.debug "No delay added to sensor detecting no motion."
-        	lightsOff()
+            lightsOff()
         }
-	}
+    }
 }
 
 def scheduleCheck() {
-	log.debug "scheduled check..."
+        log.debug "scheduled check..."
     if (state.swOn == true) {
-    	def motionState = motion1.currentState("motion")
+        def motionState = motion1.currentState("motion")
         if (motionState.value == "inactive") {
-        	def elapsed = now() - motionState.rawDateCreated.time
-    		def threshold = 1000 * 60 * minutes1 - 1000
-    		if (elapsed >= threshold) {
-	            log.debug "... motion has stayed inactive long enough since last check ($elapsed ms):  turning lights off"
-    	        lightsOff()
-    		} else {
-        		log.debug "... motion has not stayed inactive long enough since last check ($elapsed ms):  doing nothing"
-			}
-    	} else {
-    		log.debug "... motion is still active, do nothing and wait for inactive"
-    	}
+            def elapsed = now() - motionState.rawDateCreated.time
+                def threshold = 1000 * 60 * minutes1 - 1000
+            if (elapsed >= threshold) {
+                log.debug "... motion has stayed inactive long enough since last check ($elapsed ms):  turning lights off"
+                lightsOff()
+            } else {
+                log.debug "... motion has not stayed inactive long enough since last check ($elapsed ms):  doing nothing"
+            }
+        } else {
+            log.debug "... motion is still active, do nothing and wait for inactive"
+        }
     }
 }
