@@ -72,35 +72,32 @@ def updated() {
 
 def motionHandler(evt) {
     def currentLux = lightmeter1.currentValue("illuminance")
-    log.debug "$evt.name: $evt.value current lux level: $currentLux, threshold for switch on: $lightlevel1"
+    log.debug "Current lux level: $currentLux, threshold for switch on: $lightlevel1"
     if ((evt.value == "active") && (currentLux < lightlevel1)) {
         lightsOn()
     } else if ((evt.value == "inactive") && (state.swOn == true)) {
         if (minutes1 >= 1) {
             runIn(minutes1 * 60, scheduleCheck, [overwrite: false])
-            log.debug "Scheduled switchoff of light(s) in $minutes1 minutes due to added delay."
+            log.debug "Scheduling switchoff of light(s) in $minutes1 mins."
         } else {
-            log.debug "No delay added to sensor detecting no motion."
             lightsOff()
         }
     }
 }
 
 def scheduleCheck() {
-        log.debug "scheduled check..."
+    log.debug "scheduled check..."
     if (state.swOn == true) {
         def motionState = motion1.currentState("motion")
         if (motionState.value == "inactive") {
             def elapsed = now() - motionState.rawDateCreated.time
-                def threshold = 1000 * 60 * minutes1 - 1000
+            def threshold = 1000 * 60 * minutes1 - 1000
             if (elapsed >= threshold) {
-                log.debug "... motion has stayed inactive long enough since last check ($elapsed ms):  turning lights off"
+                log.debug "No motion detected for $minutes1 mins: turning lights off"
                 lightsOff()
-            } else {
-                log.debug "... motion has not stayed inactive long enough since last check ($elapsed ms):  doing nothing"
             }
         } else {
-            log.debug "... motion is still active, do nothing and wait for inactive"
+            log.debug "Still registering motion"
         }
     }
 }
