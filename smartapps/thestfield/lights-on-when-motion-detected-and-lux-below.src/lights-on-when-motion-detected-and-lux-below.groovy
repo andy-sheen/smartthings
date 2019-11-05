@@ -72,14 +72,15 @@ def updated() {
 
 def motionHandler(evt) {
     def currentLux = lightmeter1.currentValue("illuminance")
-    if (evt.value == "active") {
+    if (evt.value == "active") { // Remove any scheduled lights off....
         log.debug "Motion detected: current lux level: $currentLux, threshold for switch on: $lightlevel1"
+        unsubscribe(lightsOff)
     }
     if ((evt.value == "active") && (currentLux < lightlevel1)) {
         lightsOn()
-    } else if ((evt.value == "inactive") && (state.swOn == true)) {
+    } else if (evt.value == "inactive") {
         if (minutes1 >= 1) {
-            runIn(minutes1 * 60, scheduleCheck, [overwrite: false])
+            runIn(minutes1 * 60, lightsOff)
             log.debug "Scheduling switchoff of light(s) in $minutes1 mins."
         } else {
             lightsOff()
@@ -87,19 +88,19 @@ def motionHandler(evt) {
     }
 }
 
-def scheduleCheck() {
-    log.debug "scheduled check..."
-    if (state.swOn == true) {
-        def motionState = motion1.currentState("motion")
-        if (motionState.value == "inactive") {
-            def elapsed = now() - motionState.rawDateCreated.time
-            def threshold = 1000 * 60 * minutes1 - 1000
-            if (elapsed >= threshold) {
-                log.debug "No motion detected for $minutes1 mins: turning lights off"
-                lightsOff()
-            }
-        } else {
-            log.debug "Still registering motion"
-        }
-    }
-}
+// def scheduleCheck() {
+//     log.debug "scheduled check..."
+//     if (state.swOn == true) {
+//         def motionState = motion1.currentState("motion")
+//         if (motionState.value == "inactive") {
+//             def elapsed = now() - motionState.rawDateCreated.time
+//             def threshold = 1000 * 60 * minutes1 - 1000
+//             if (elapsed >= threshold) {
+//                 log.debug "No motion detected for $minutes1 mins: turning lights off"
+//                 lightsOff()
+//             }
+//         } else {
+//             log.debug "Still registering motion"
+//         }
+//     }
+// }
