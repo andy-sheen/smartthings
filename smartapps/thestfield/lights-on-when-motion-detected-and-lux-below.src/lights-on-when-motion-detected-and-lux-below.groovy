@@ -76,7 +76,7 @@ def motionHandler(evt) {
         log.debug "Motion detected: current lux level: $currentLux, threshold for switch on: $lightlevel1"
         unsubscribe(lightsOff)
     }
-    if ((evt.value == "active") && (currentLux < lightlevel1)) {
+    if ((evt.value == "active") && (currentLux <= lightlevel1)) {
         lightsOn()
     } else if (evt.value == "inactive") {
         if (minutes1 >= 1) {
