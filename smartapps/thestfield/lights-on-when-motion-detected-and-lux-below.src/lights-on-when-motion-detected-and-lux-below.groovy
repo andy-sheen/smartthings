@@ -74,7 +74,7 @@ def motionHandler(evt) {
     def currentLux = lightmeter1.currentValue("illuminance")
     if (evt.value == "active") { // Remove any scheduled lights off....
         log.debug "Motion detected: current lux level: $currentLux, threshold for switch on: $lightlevel1"
-        unsubscribe(lightsOff)
+        unschedule(lightsOff)
     }
     if ((evt.value == "active") && (currentLux <= lightlevel1)) {
         lightsOn()
