@@ -48,14 +48,7 @@ preferences {
 
 def lightsOff() {
     offswitches.off()
-    state.swOn = false
     log.debug "lights off..."
-}
-
-def lightsOn() {
-    onswitches.on()
-    state.swOn = true
-    log.debug "lights on..."
 }
 
 def installed() {
@@ -72,12 +65,10 @@ def updated() {
 
 def motionHandler(evt) {
     def currentLux = lightmeter1.currentValue("illuminance")
-    if (evt.value == "active") { // Remove any scheduled lights off....
-        log.debug "Motion detected: current lux level: $currentLux, threshold for switch on: $lightlevel1"
-        unschedule(lightsOff)
-    }
+
     if ((evt.value == "active") && (currentLux <= lightlevel1)) {
-        lightsOn()
+        log.debug "Motion detected: current lux level: $currentLux, threshold for switch on: $lightlevel1 -> lights on"
+        onswitches.on()
     } else if (evt.value == "inactive") {
         if (minutes1 >= 1) {
             runIn(minutes1 * 60, lightsOff)
@@ -86,21 +77,9 @@ def motionHandler(evt) {
             lightsOff()
         }
     }
-}
 
-// def scheduleCheck() {
-//     log.debug "scheduled check..."
-//     if (state.swOn == true) {
-//         def motionState = motion1.currentState("motion")
-//         if (motionState.value == "inactive") {
-//             def elapsed = now() - motionState.rawDateCreated.time
-//             def threshold = 1000 * 60 * minutes1 - 1000
-//             if (elapsed >= threshold) {
-//                 log.debug "No motion detected for $minutes1 mins: turning lights off"
-//                 lightsOff()
-//             }
-//         } else {
-//             log.debug "Still registering motion"
-//         }
-//     }
-// }
+    if (evt.value == "active") { // Remove any scheduled lights off....
+        log.debug "Motion detected: unscheduling any light off event outstanding."
+        unschedule(lightsOff)
+    }
+}
