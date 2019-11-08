@@ -66,6 +66,13 @@ def updated() {
 def motionHandler(evt) {
     def currentLux = lightmeter1.currentValue("illuminance")
 
+    def currSwitches = offswitches.currentSwitch
+    def swThatAreOn = currSwitches.findAll { switchVal ->
+        switchVal == "on" ? true : false
+    }
+
+    log.debug "${swThatAreOn.size()} switches on from ${offswitches.size()} switches that need to be turned off."
+
     if ((evt.value == "active") && (currentLux <= lightlevel1)) {
         log.debug "Motion detected: current lux level: $currentLux, threshold for switch on: $lightlevel1 -> lights on (and unschedule any switchoff)"
         onswitches.on()
