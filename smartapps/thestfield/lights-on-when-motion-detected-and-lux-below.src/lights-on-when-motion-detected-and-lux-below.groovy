@@ -89,6 +89,9 @@ def motionHandler(evt) {
         }
     } else if ((evt.value == "inactive") && (swOn == 0)) {
         log.debug "Motion inactive: no lights on, so not scheduling switchoff."
+    } else { // Active but > lightLevel1
+        log.debug "Motion detected: doing nothing. lux: $currentLux > $lightlevel1, switches on: $swOn"
     }
+
 
 }
