@@ -71,22 +71,24 @@ def motionHandler(evt) {
         switchVal == "on" ? true : false
     }
 
-    log.debug "${swThatAreOn.size()} switches on from ${offswitches.size()} switches that need to be turned off."
+    def swOn = swThatAreOn.size()
 
     if ((evt.value == "active") && (currentLux <= lightlevel1)) {
         log.debug "Motion detected: current lux level: $currentLux, threshold for switch on: $lightlevel1 -> lights on (and unschedule any switchoff)"
         onswitches.on()
         unschedule(lightsOff)
-    } else if (evt.value == "active") { // Light above threshold, remove any outstanding scheduled lights off....
-        log.debug "Motion detected: unscheduling any light off event outstanding. Current lux: $currentLux"
+    } else if ((evt.value == "active") && (swOn > 0)) { // Light above threshold, and we have lights on....
+        log.debug "Motion detected: $swOn lights on. Cancelling any light off event outstanding. Current lux: $currentLux"
         unschedule(lightsOff)
-    } else if (evt.value == "inactive") {
+    } else if ((evt.value == "inactive") && (swOn > 0)) {
         if (minutes1 >= 1) {
             runIn(minutes1 * 60, lightsOff)
-            log.debug "Motion inactive: scheduling switchoff of light(s) in $minutes1 mins."
+            log.debug "Motion inactive: scheduling switchoff of $swOn light(s) in $minutes1 mins."
         } else {
             lightsOff()
         }
+    } else if ((evt.value == "inactive") && (swOn == 0)) {
+        log.debug "Motion inactive: no lights on, so not scheduling switchoff."
     }
 
 }
