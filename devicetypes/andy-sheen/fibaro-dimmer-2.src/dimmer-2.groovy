@@ -30,7 +30,7 @@
  *
  *****************************************************************************************************************/
 metadata {
-    definition (name: "Fibaro Dimmer 2", namespace: "codersaur", author: "David Lomas") {
+    definition (name: "Fibaro Dimmer 2", namespace: "andy-sheen", author: "David Lomas") {
         capability "Actuator"
         capability "Switch"
         capability "Switch Level"
